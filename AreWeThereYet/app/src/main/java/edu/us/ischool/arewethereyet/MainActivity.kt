@@ -54,79 +54,40 @@ class MainActivity : AppCompatActivity() {
         registerReceiver(receiver, intFilter)
 
         // initially disable button and enable edit texts
-        startBtn.isEnabled = false
         messageET.isEnabled = true
         phoneET.isEnabled = true
         minutesET.isEnabled = true
 
-        // listeners for all the text edits
-        messageET.addTextChangedListener(object: TextWatcher {
-            override fun onTextChanged(s:CharSequence, start:Int, before:Int, count:Int) {
-                startBtn.isEnabled =
-                    isValidInput(messageET.text.toString(), phoneET.text.toString(), minutesET.text.toString())
-            }
-            override fun beforeTextChanged(s:CharSequence, start:Int, count:Int,
-                                           after:Int) {
-                // TODO Auto-generated method stub
-            }
-            override fun afterTextChanged(s: Editable) {
-                // TODO Auto-generated method stub
-            }
-        })
-        phoneET.addTextChangedListener(object: TextWatcher {
-            override fun onTextChanged(s:CharSequence, start:Int, before:Int, count:Int) {
-                startBtn.isEnabled =
-                    isValidInput(messageET.text.toString(), phoneET.text.toString(), minutesET.text.toString())
-            }
-            override fun beforeTextChanged(s:CharSequence, start:Int, count:Int,
-                                           after:Int) {
-                // TODO Auto-generated method stub
-            }
-            override fun afterTextChanged(s: Editable) {
-                // TODO Auto-generated method stub
-            }
-        })
-        minutesET.addTextChangedListener(object: TextWatcher {
-            override fun onTextChanged(s:CharSequence, start:Int, before:Int, count:Int) {
-                startBtn.isEnabled =
-                    isValidInput(messageET.text.toString(), phoneET.text.toString(), minutesET.text.toString())
-            }
-            override fun beforeTextChanged(s:CharSequence, start:Int, count:Int,
-                                           after:Int) {
-                // TODO Auto-generated method stub
-            }
-            override fun afterTextChanged(s: Editable) {
-                // TODO Auto-generated method stub
-            }
-        })
-
         // set up button
         startBtn.setOnClickListener{
-            if (isSending) {
-                messageET.isEnabled = true
-                phoneET.isEnabled = true
-                minutesET.isEnabled = true
 
-                if (alarmManager != null) {
-                    stopMessages(alarmManager)
-                }
-                startBtn.text = "Start"
-            } else {
-                messageET.isEnabled = false;
-                phoneET.isEnabled = false;
-                minutesET.isEnabled = false;
+            if (isValidInput(messageET.text.toString(), phoneET.text.toString(), minutesET.text.toString())) {
+                if (isSending) {
+                    messageET.isEnabled = true
+                    phoneET.isEnabled = true
+                    minutesET.isEnabled = true
 
-                if (alarmManager != null) {
-                    sendMessages(alarmManager, messageET.text.toString(), phoneET.text.toString(), minutesET.text.toString().toInt())
+                    if (alarmManager != null) {
+                        stopMessages(alarmManager)
+                    }
+                    startBtn.text = "Start"
+                } else {
+                    messageET.isEnabled = false;
+                    phoneET.isEnabled = false;
+                    minutesET.isEnabled = false;
+
+                    if (alarmManager != null) {
+                        sendMessages(alarmManager, messageET.text.toString(), phoneET.text.toString(), minutesET.text.toString().toInt())
+                    }
+                    startBtn.text = "Stop"
                 }
-                startBtn.text = "Stop"
             }
         }
     }
 
     private fun sendMessages(alarm: AlarmManager, message: String, phone: String, min: Int) {
         // register alarm to go off
-        val time = System.currentTimeMillis() //+ (min * 60000)
+        val time = System.currentTimeMillis() + (min * 60000)
         Log.i("IntentListener", time.toString())
 
         val intent = Intent("edu.us.ischool.NAG")
@@ -147,6 +108,7 @@ class MainActivity : AppCompatActivity() {
 
     private fun isValidInput(message: String, num: String, min: String) : Boolean {
         if (message.isEmpty() || num.isBlank() || min.isBlank()) {
+            Toast.makeText(this, "Inputs cannot be empty", Toast.LENGTH_SHORT).show()
             return false
         }
 
@@ -154,6 +116,17 @@ class MainActivity : AppCompatActivity() {
         val pattern: Pattern = Pattern.compile("\\(\\d{3}\\) \\d{3}-\\d{4}")
         val matcher: Matcher = pattern.matcher(num)
 
-        return message.isNotEmpty() && matcher.matches() && min.toDouble() > 0 && (min.toDouble() % 1 == 0.0)
+        if (message.isEmpty()) {
+            Toast.makeText(this, "Message should not be empty", Toast.LENGTH_SHORT).show()
+            return false
+        } else if (!matcher.matches()) {
+            Toast.makeText(this, "Phone number does not match format", Toast.LENGTH_SHORT).show()
+            return false
+        } else if (!(min.toDouble() > 0 && (min.toDouble() % 1 == 0.0))) {
+            Toast.makeText(this, "Minutes have to be above 0 and a whole number", Toast.LENGTH_SHORT).show()
+            return false
+        }
+
+        return true
     }
 }
