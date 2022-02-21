@@ -42,7 +42,7 @@
                 android:layout_height="wrap_content"
                 android:ems="10"
                 android:layout_marginBottom="8dp"
-                android:text="Example: 555-555-5555"
+                android:text="Example: (555) 555-5555"
                 android:textSize="12dp" />
 
             <EditText

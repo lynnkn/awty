@@ -8,8 +8,7 @@ import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
 import android.os.Bundle
-import android.text.Editable
-import android.text.TextWatcher
+import android.telephony.SmsManager
 import android.util.Log
 import android.widget.Button
 import android.widget.EditText
@@ -29,9 +28,25 @@ class MainActivity : AppCompatActivity() {
 
         override fun onReceive(context: Context?, intent: Intent?) {
             val message = intent?.extras?.getString("EXTRA_MESSAGE")
-            val phone = intent?.extras?.getString("EXTRA_PHONE")
+            var phone: String? = intent?.extras?.getString("EXTRA_PHONE")?.digitsOnly()
             Log.i("IntentListener", "We received an intent: $message : $phone")
-            Toast.makeText(context?.getApplicationContext(), "${phone}:${message}", Toast.LENGTH_SHORT).show()
+
+            // send SMS message
+            if (message != null && phone != null) {
+                sendSMS(context, phone, message)
+            }
+        }
+
+        fun sendSMS(context:Context?, phone: String?, message: String?) {
+            val smsMgr = SmsManager.getDefault()
+            smsMgr?.sendTextMessage(phone,null, message, null, null)
+            Log.i("IntentListener", "Message Sent")
+            Toast.makeText(context?.applicationContext, "Message Sent", Toast.LENGTH_SHORT).show()
+        }
+
+        fun String.digitsOnly(): String{
+            val regex = "[^0-9+]".toRegex()
+            return regex.replace(this, "")
         }
     }
 
@@ -60,7 +75,6 @@ class MainActivity : AppCompatActivity() {
 
         // set up button
         startBtn.setOnClickListener{
-
             if (isValidInput(messageET.text.toString(), phoneET.text.toString(), minutesET.text.toString())) {
                 if (isSending) {
                     messageET.isEnabled = true
@@ -88,7 +102,6 @@ class MainActivity : AppCompatActivity() {
     private fun sendMessages(alarm: AlarmManager, message: String, phone: String, min: Int) {
         // register alarm to go off
         val time = System.currentTimeMillis() + (min * 60000)
-        Log.i("IntentListener", time.toString())
 
         val intent = Intent("edu.us.ischool.NAG")
         intent.putExtra("EXTRA_MESSAGE", message)
